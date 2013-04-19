@@ -12,6 +12,7 @@
 static const char *path_separator = "/", *read_only_permits = "r";
 static const char *path = "data";
 static FILE *get_ucac4_zone_file( const int zone_number, const char *path);
+static const double eps = 1e-7;
 
 int main(int arc, const char **argv) {
   const double start_dec = -10.;
@@ -19,13 +20,13 @@ int main(int arc, const char **argv) {
   const double zone_height = .2;
   //const int zone = (int)((start_dec + 90.) / zone_height) + 1;
   int zone = 400;
-  const int end_zone = (int)((end_dec + 90.) / zone_height) + 1;
+  const int end_zone = (int)((end_dec + 90.) / zone_height);
   FILE *ifile;
   UCAC4_STAR star;
   const int buffsize = 400;
   UCAC4_STAR *stars = (UCAC4_STAR *)calloc( buffsize, sizeof( UCAC4_STAR));
   //ifile = get_ucac4_zone_file(zone, path);
-  if (ifile) {
+  //if (ifile) {
     //char ibuff[50];
     printf("Everything is ok\n");
     printf("%d %d\n",zone,end_zone);
@@ -40,29 +41,67 @@ int main(int arc, const char **argv) {
     int keep_going = 1;
     int n_read = 0;
     int i;
+    FILE *file_a, *log;
+    file_a = fopen("magA.dat", "w");
+    log = fopen("u4get.log", "w");
     while ( zone <= end_zone && keep_going) {
       ifile = get_ucac4_zone_file(zone, path);
+      if (ifile) 
       while ( (n_read = fread(stars, sizeof(UCAC4_STAR), buffsize, ifile)) > 0 
 	      && keep_going)
 	for( i = 0; i < n_read && keep_going; i++) {
 	  UCAC4_STAR star = stars[i];
 	  
 	  /* Picking stars */
-
+	  //printf("Picking stars\n");
 	  /* Filter on # catalogs used for PM  */
-	  if (star.cu1 < 3) continue;
-	  
+	  if (star.n_cats_used < 3) {
+	    fprintf(log, "%9d excluded: less number of catalogs used for PM %2d\n",
+		    star.id_number, 
+		    (int) star.n_cats_used);
+	    continue;
+	  }
 	  /* Filter on Proper motion */
-	  int pmra = star.pm_ra;
-	  int pmdec = star.pm_dec;
-	  if ( sqrt(pmra * pmra + pmdec * pmdec) > 100 ) continue;
+	  if ( !star.pm_ra && !star.pm_dec )  continue;
+	  else {
+	    double pmra = star.pm_ra / 10.;
+	    double pmdec = star.pm_dec / 10.;
+	    double pm = sqrt( pmra * pmra + pmdec * pmdec );
+	    //printf("%6d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
+	    if ( (pm - 100. ) > eps ) continue;
+	  }
+	  
+	  /* Separating by magnitude intervals */
+	  if ( star.mag2 / 1000 > 9. && star.mag2 / 1000 < 12.9 ) {
+	    //FILE *file_a;
+	    //file_a = fopen("magA.dat", "w");
+	    long epoch_ra = 190000 + star.epoch_ra;
+	    long epoch_dec = 190000 + star.epoch_dec;
+	    fprintf(file_a, "%3d %3d %1.%01d %1d.%01d %4d.%02d %4d.%02d\n",
+		    star.ra_sigma + 128,
+		    star.dec_sigma + 128,
+		    //(double) (star.pm_ra_sigma + 128) / 10.,
+		    (int) (star.pm_ra_sigma + 128) / 10,
+		    (int) (star.pm_ra_sigma + 128) % 10, 
+		    //(double) (star.pm_dec_sigma + 128) / 10.,
+		    (int) (star.pm_dec_sigma + 128) / 10,
+		    (int) (star.pm_dec_sigma + 128) % 10,
+		    (int) epoch_ra / 100,
+		    (int) epoch_ra % 100,
+		    (int) epoch_dec / 100,
+		    (int) epoch_dec % 100);
+	  }
+	  //if ( star.mag2 / 1
 	}
       zone++;
-    }
-  } else {
-    printf("File can\'t be opened.\n");
-  }
-
+      fclose(file_a);
+      fclose(log);
+      	}
+      //  } else {
+      //    printf("File can\'t be opened.\n");
+      //  }
+      //fclose(file_a);
+      //fclose(log);
   return 0;
 }
     
