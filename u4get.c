@@ -62,13 +62,23 @@ int main(int arc, const char **argv) {
 	    continue;
 	  }
 	  /* Filter on Proper motion */
-	  if ( !star.pm_ra && !star.pm_dec )  continue;
+	  if ( !star.pm_ra && !star.pm_dec ) {
+	    fprintf(log, "%9d excluded: no PM given %6d %6d\n",
+		    star.id_number,
+		    star.pm_ra,
+		    star.pm_dec);
+	    continue;
+	  }
 	  else {
 	    double pmra = star.pm_ra / 10.;
 	    double pmdec = star.pm_dec / 10.;
 	    double pm = sqrt( pmra * pmra + pmdec * pmdec );
 	    //printf("%6d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
-	    if ( (pm - 100. ) > eps ) continue;
+	    if ( (pm - 100. ) > eps ) {
+	      fprintf(log, "%9d excluded: total PM exceeds 100 mas/y %12.8lf %12.8lf %12.8lf\n",
+		    star.id_number, pmra, pmdec, pm);
+	      continue;
+	    }
 	  }
 	  
 	  /* Separating by magnitude intervals */
