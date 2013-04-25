@@ -60,15 +60,14 @@ int main(int arc, const char **argv) {
 	  //printf("Picking stars\n");
 	  /* Filter on # catalogs used for PM  */
 	  if (star.n_cats_used < 3) {
-	    fprintf(log, "%3d-%06d %9d excluded: less number of catalogs used for PM %2d\n",
-		    zone, i + 1,
+	    fprintf(log, "%9d excluded: less number of catalogs used for PM: %2d\n",
 		    star.id_number, 
 		    (int) star.n_cats_used);
 	    continue;
 	  }
 	  /* Filter on Proper motion */
 	  if ( !star.pm_ra && !star.pm_dec ) {
-	    fprintf(log, "%9d excluded: no PM given %6d %6d\n",
+	    fprintf(log, "%9d excluded: no PM given: %6d %6d\n",
 		    star.id_number,
 		    star.pm_ra,
 		    star.pm_dec);
@@ -80,7 +79,7 @@ int main(int arc, const char **argv) {
 	    double pm = sqrt( pmra * pmra + pmdec * pmdec );
 	    //printf("%6d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
 	    if ( (pm - 100. ) > eps ) {
-	      fprintf(log, "%9d excluded: total PM exceeds 100 mas/y %12.8lf\n",
+	      fprintf(log, "%9d excluded: total PM exceeds 100 mas/y: %12.8lf\n",
 		      star.id_number,
 		      pm);
 	      continue;
@@ -111,12 +110,13 @@ int main(int arc, const char **argv) {
 		    star.id_number,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
+	    continue;
 	  }
 
 	  if ( star.mag2 > 11000 && star.mag2 < 14000 ) {
 	    epoch_ra = 190000 + star.epoch_ra;
 	    epoch_dec = 190000 + star.epoch_dec;
-	    fprintf(file_b, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
+	    fprintf(file_b, "%3d %3d %3d.%01d %3d.%01d %4d.%02d %4d.%02d\n",
 		    star.ra_sigma + 128,
 		    star.dec_sigma + 128,
 		    //(double) (star.pm_ra_sigma + 128) / 10.,
@@ -133,12 +133,13 @@ int main(int arc, const char **argv) {
 		    star.id_number,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
+	    continue;
 	  }
 
 	  if ( star.mag2 > 13000 && star.mag2 < 15900 ) {
 	    epoch_ra = 190000 + star.epoch_ra;
 	    epoch_dec = 190000 + star.epoch_dec;
-	    fprintf(file_b, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
+	    fprintf(file_c, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
 		    star.ra_sigma + 128,
 		    star.dec_sigma + 128,
 		    //(double) (star.pm_ra_sigma + 128) / 10.,
@@ -155,8 +156,13 @@ int main(int arc, const char **argv) {
 		    star.id_number,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
+	    continue;
 	  }
-	  //if ( star.mag2 / 1
+	  
+	 fprintf(log, "%9d excluded: out of range %2d.%03d\n",
+		    star.id_number,
+		    star.mag2 / 1000,
+		    abs(star.mag2 % 1000));
 	}
       //if (!ifile) keep_going = 0;
       zone++;
