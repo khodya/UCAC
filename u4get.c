@@ -5,7 +5,7 @@
 #include "ucac4.h"
 
 /* The following code is intended to separate all UCAC4 stars 
-   by UCAC apparent magnitude by regions 9-12.9 12-14.9 13-15.9.
+   by UCAC apparent magnitude by 3 regions.
    As a result, 3 new files will be created each containing
    extracted stars data in ASCII format. */
 
@@ -75,8 +75,9 @@ int main(int arc, const char **argv) {
 	    double pm = sqrt( pmra * pmra + pmdec * pmdec );
 	    //printf("%6d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
 	    if ( (pm - 100. ) > eps ) {
-	      fprintf(log, "%9d excluded: total PM exceeds 100 mas/y %12.8lf %12.8lf %12.8lf\n",
-		    star.id_number, pmra, pmdec, pm);
+	      fprintf(log, "%9d excluded: total PM exceeds 100 mas/y %12.8lf\n",
+		      star.id_number,
+		      pm);
 	      continue;
 	    }
 	  }
@@ -87,7 +88,7 @@ int main(int arc, const char **argv) {
 	    //file_a = fopen("magA.dat", "w");
 	    long epoch_ra = 190000 + star.epoch_ra;
 	    long epoch_dec = 190000 + star.epoch_dec;
-	    fprintf(file_a, "%3d %3d %1.%01d %1d.%01d %4d.%02d %4d.%02d\n",
+	    fprintf(file_a, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
 		    star.ra_sigma + 128,
 		    star.dec_sigma + 128,
 		    //(double) (star.pm_ra_sigma + 128) / 10.,
@@ -100,13 +101,21 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
+	    fprintf(log, "%9d included: %2d.%03d mag\n",
+		    star.id_number,
+		    star.mag2 / 1000,
+		    abs(star.mag2 % 1000));
 	  }
 	  //if ( star.mag2 / 1
 	}
+      if (!ifile) {
+	printf("fcuk!\n");
+	keep_going = 0;
+      }
       zone++;
       fclose(file_a);
       fclose(log);
-      	}
+    }
       //  } else {
       //    printf("File can\'t be opened.\n");
       //  }
