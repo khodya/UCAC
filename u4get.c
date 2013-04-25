@@ -20,6 +20,8 @@ int main(int arc, const char **argv) {
   const double zone_height = .2;
   //const int zone = (int)((start_dec + 90.) / zone_height) + 1;
   int zone = 400;
+  long epoch_ra;
+  long epoch_dec;
   const int end_zone = (int)((end_dec + 90.) / zone_height);
   FILE *ifile;
   UCAC4_STAR star;
@@ -41,8 +43,10 @@ int main(int arc, const char **argv) {
     int keep_going = 1;
     int n_read = 0;
     int i;
-    FILE *file_a, *log;
+    FILE *file_a, *file_b, *file_c, *log;
     file_a = fopen("magA.dat", "w");
+    file_b = fopen("magB.dat", "w");
+    file_c = fopen("magC.dat", "w");
     log = fopen("u4get.log", "w");
     while ( zone <= end_zone && keep_going) {
       ifile = get_ucac4_zone_file(zone, path);
@@ -56,7 +60,8 @@ int main(int arc, const char **argv) {
 	  //printf("Picking stars\n");
 	  /* Filter on # catalogs used for PM  */
 	  if (star.n_cats_used < 3) {
-	    fprintf(log, "%9d excluded: less number of catalogs used for PM %2d\n",
+	    fprintf(log, "%3d-%06d %9d excluded: less number of catalogs used for PM %2d\n",
+		    zone, i + 1,
 		    star.id_number, 
 		    (int) star.n_cats_used);
 	    continue;
@@ -83,11 +88,12 @@ int main(int arc, const char **argv) {
 	  }
 	  
 	  /* Separating by magnitude intervals */
-	  if ( star.mag2 / 1000 > 9. && star.mag2 / 1000 < 12.9 ) {
+	  
+	  if ( star.mag2 >= 9000 && star.mag2 <= 12900 ) {
 	    //FILE *file_a;
 	    //file_a = fopen("magA.dat", "w");
-	    long epoch_ra = 190000 + star.epoch_ra;
-	    long epoch_dec = 190000 + star.epoch_dec;
+	    epoch_ra = 190000 + star.epoch_ra;
+	    epoch_dec = 190000 + star.epoch_dec;
 	    fprintf(file_a, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
 		    star.ra_sigma + 128,
 		    star.dec_sigma + 128,
@@ -101,19 +107,62 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%9d included: %2d.%03d mag\n",
+	    fprintf(log, "%9d included: I range %2d.%03d\n",
+		    star.id_number,
+		    star.mag2 / 1000,
+		    abs(star.mag2 % 1000));
+	  }
+
+	  if ( star.mag2 > 11000 && star.mag2 < 14000 ) {
+	    epoch_ra = 190000 + star.epoch_ra;
+	    epoch_dec = 190000 + star.epoch_dec;
+	    fprintf(file_b, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
+		    star.ra_sigma + 128,
+		    star.dec_sigma + 128,
+		    //(double) (star.pm_ra_sigma + 128) / 10.,
+		    (int) (star.pm_ra_sigma + 128) / 10,
+		    (int) (star.pm_ra_sigma + 128) % 10, 
+		    //(double) (star.pm_dec_sigma + 128) / 10.,
+		    (int) (star.pm_dec_sigma + 128) / 10,
+		    (int) (star.pm_dec_sigma + 128) % 10,
+		    (int) epoch_ra / 100,
+		    (int) epoch_ra % 100,
+		    (int) epoch_dec / 100,
+		    (int) epoch_dec % 100);
+	    fprintf(log, "%9d included: II range %2d.%03d\n",
+		    star.id_number,
+		    star.mag2 / 1000,
+		    abs(star.mag2 % 1000));
+	  }
+
+	  if ( star.mag2 > 13000 && star.mag2 < 15900 ) {
+	    epoch_ra = 190000 + star.epoch_ra;
+	    epoch_dec = 190000 + star.epoch_dec;
+	    fprintf(file_b, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
+		    star.ra_sigma + 128,
+		    star.dec_sigma + 128,
+		    //(double) (star.pm_ra_sigma + 128) / 10.,
+		    (int) (star.pm_ra_sigma + 128) / 10,
+		    (int) (star.pm_ra_sigma + 128) % 10, 
+		    //(double) (star.pm_dec_sigma + 128) / 10.,
+		    (int) (star.pm_dec_sigma + 128) / 10,
+		    (int) (star.pm_dec_sigma + 128) % 10,
+		    (int) epoch_ra / 100,
+		    (int) epoch_ra % 100,
+		    (int) epoch_dec / 100,
+		    (int) epoch_dec % 100);
+	    fprintf(log, "%9d included: III range %2d.%03d\n",
 		    star.id_number,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
 	  }
 	  //if ( star.mag2 / 1
 	}
-      if (!ifile) {
-	printf("fcuk!\n");
-	keep_going = 0;
-      }
+      //if (!ifile) keep_going = 0;
       zone++;
       fclose(file_a);
+      fclose(file_b);
+      fclose(file_c);
       fclose(log);
     }
       //  } else {
