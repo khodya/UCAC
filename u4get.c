@@ -52,7 +52,7 @@ int main(int arc, const char **argv) {
       ifile = get_ucac4_zone_file(zone, path);
       if (ifile) 
       while ( (n_read = fread(stars, sizeof(UCAC4_STAR), buffsize, ifile)) > 0 
-	      && keep_going)
+	      && keep_going) 
 	for( i = 0; i < n_read && keep_going; i++) {
 	  UCAC4_STAR star = stars[i];
 	  
@@ -112,7 +112,7 @@ int main(int arc, const char **argv) {
 		    abs(star.mag2 % 1000));
 	    continue;
 	  }
-
+	  
 	  if ( star.mag2 > 11000 && star.mag2 < 14000 ) {
 	    epoch_ra = 190000 + star.epoch_ra;
 	    epoch_dec = 190000 + star.epoch_dec;
@@ -159,24 +159,19 @@ int main(int arc, const char **argv) {
 	    continue;
 	  }
 	  
-	 fprintf(log, "%9d excluded: out of range %2d.%03d\n",
-		    star.id_number,
-		    star.mag2 / 1000,
-		    abs(star.mag2 % 1000));
+	  fprintf(log, "%9d excluded: out of range %2d.%03d\n",
+		 star.id_number,
+		 star.mag2 / 1000,
+		 abs(star.mag2 % 1000));
 	}
-      //if (!ifile) keep_going = 0;
+      fclose(ifile);
       zone++;
-      fclose(file_a);
-      fclose(file_b);
-      fclose(file_c);
-      fclose(log);
     }
-      //  } else {
-      //    printf("File can\'t be opened.\n");
-      //  }
-      //fclose(file_a);
-      //fclose(log);
-  return 0;
+    fclose(file_a);
+    fclose(file_b);
+    fclose(file_c);
+    fclose(log);
+    return 0;
 }
     
 static FILE *get_ucac4_zone_file( const int zone_number, const char *path)
