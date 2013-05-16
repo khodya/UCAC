@@ -29,46 +29,51 @@ int main(int arc, const char **argv) {
   UCAC4_STAR *stars = (UCAC4_STAR *)calloc( buffsize, sizeof( UCAC4_STAR));
   //ifile = get_ucac4_zone_file(zone, path);
   //if (ifile) {
-    //char ibuff[50];
-    printf("Everything is ok\n");
-    printf("%d %d\n",zone,end_zone);
-    //fseek(ifile, 0L, SEEK_END);
-    //fread(&star, 1, sizeof( UCAC4_STAR), ifile);
-    //fgets(ibuff, sizeof( ibuff), ifile); 
-    //printf("%s\n", ibuff);
-    //printf("%c\n", ibuff[0]);
-    //printf("%9d %12.8lf %12.8lf\n", star.id_number,
-    //	   (double) star.ra / 3600000.,
-    //	   (double) star.spd / 3600000. - 90.);
-    int keep_going = 1;
-    int n_read = 0;
-    int i;
-    FILE *file_a, *file_b, *file_c, *log;
-    file_a = fopen("magA.dat", "w");
-    file_b = fopen("magB.dat", "w");
-    file_c = fopen("magC.dat", "w");
-    log = fopen("u4get.log", "w");
-    while ( zone <= end_zone && keep_going) {
-      ifile = get_ucac4_zone_file(zone, path);
-      if (ifile) 
+  //char ibuff[50];
+  printf("Everything is ok\n");
+  printf("%d %d\n",zone,end_zone);
+  //fseek(ifile, 0L, SEEK_END);
+  //fread(&star, 1, sizeof( UCAC4_STAR), ifile);
+  //fgets(ibuff, sizeof( ibuff), ifile); 
+  //printf("%s\n", ibuff);
+  //printf("%c\n", ibuff[0]);
+  //printf("%9d %12.8lf %12.8lf\n", star.id_number,
+  //	   (double) star.ra / 3600000.,
+  //	   (double) star.spd / 3600000. - 90.);
+  int keep_going = 1;
+  int n_read = 0;
+  int i;
+  int star_i;
+  FILE *file_a, *file_b, *file_c, *log;
+  file_a = fopen("magA.dat", "w");
+  file_b = fopen("magB.dat", "w");
+  file_c = fopen("magC.dat", "w");
+  log = fopen("u4get.log", "w");
+  while ( zone <= end_zone && keep_going) {
+    ifile = get_ucac4_zone_file(zone, path);
+    if (ifile) {
+      star_i = 0;
       while ( (n_read = fread(stars, sizeof(UCAC4_STAR), buffsize, ifile)) > 0 
 	      && keep_going) 
 	for( i = 0; i < n_read && keep_going; i++) {
 	  UCAC4_STAR star = stars[i];
-	  
+	  star_i++;
+
 	  /* Picking stars */
 	  //printf("Picking stars\n");
 	  /* Filter on # catalogs used for PM  */
 	  if (star.n_cats_used < 3) {
-	    fprintf(log, "%9d excluded: less number of catalogs used for PM: %2d\n",
-		    star.id_number, 
+	    fprintf(log, "%3d %6d excluded: less number of catalogs used for PM: %2d\n",
+		    zone,
+		    star_i,
 		    (int) star.n_cats_used);
 	    continue;
 	  }
 	  /* Filter on Proper motion */
 	  if ( !star.pm_ra && !star.pm_dec ) {
-	    fprintf(log, "%9d excluded: no PM given: %6d %6d\n",
-		    star.id_number,
+	    fprintf(log, "%3d %6d excluded: no PM given: %6d %6d\n",
+		    zone,
+		    star_i,
 		    star.pm_ra,
 		    star.pm_dec);
 	    continue;
@@ -77,10 +82,11 @@ int main(int arc, const char **argv) {
 	    double pmra = star.pm_ra / 10.;
 	    double pmdec = star.pm_dec / 10.;
 	    double pm = sqrt( pmra * pmra + pmdec * pmdec );
-	    //printf("%6d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
+	    //printf("%3d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
 	    if ( (pm - 100. ) > eps ) {
-	      fprintf(log, "%9d excluded: total PM exceeds 100 mas/y: %12.8lf\n",
-		      star.id_number,
+	      fprintf(log, "%3d %6d excluded: total PM exceeds 100 mas/y: %12.8lf\n",
+		      zone,
+		      star_i,
 		      pm);
 	      continue;
 	    }
@@ -106,8 +112,9 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%9d included: I range %2d.%03d\n",
-		    star.id_number,
+	    fprintf(log, "%3d %6d included: I range %2d.%03d\n",
+		    zone,
+		    star_i,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
 	    continue;
@@ -129,8 +136,9 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%9d included: II range %2d.%03d\n",
-		    star.id_number,
+	    fprintf(log, "%3d %6d included: II range %2d.%03d\n",
+		    zone,
+		    star_i,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
 	    continue;
@@ -152,18 +160,21 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%9d included: III range %2d.%03d\n",
-		    star.id_number,
+	    fprintf(log, "%3d %6d included: III range %2d.%03d\n",
+		    zone,
+		    star_i,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
 	    continue;
 	  }
 	  
-	  fprintf(log, "%9d excluded: out of range %2d.%03d\n",
-		 star.id_number,
-		 star.mag2 / 1000,
-		 abs(star.mag2 % 1000));
+	  fprintf(log, "%3d %6d excluded: out of range %2d.%03d\n",
+		  zone,
+		  star_i, 
+		  star.mag2 / 1000,
+		  abs(star.mag2 % 1000));
 	}
+    }
       fclose(ifile);
       zone++;
     }
