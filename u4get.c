@@ -27,19 +27,8 @@ int main(int arc, const char **argv) {
   UCAC4_STAR star;
   const int buffsize = 400;
   UCAC4_STAR *stars = (UCAC4_STAR *)calloc( buffsize, sizeof( UCAC4_STAR));
-  //ifile = get_ucac4_zone_file(zone, path);
-  //if (ifile) {
-  //char ibuff[50];
   printf("Everything is ok\n");
   printf("%d %d\n",zone,end_zone);
-  //fseek(ifile, 0L, SEEK_END);
-  //fread(&star, 1, sizeof( UCAC4_STAR), ifile);
-  //fgets(ibuff, sizeof( ibuff), ifile); 
-  //printf("%s\n", ibuff);
-  //printf("%c\n", ibuff[0]);
-  //printf("%9d %12.8lf %12.8lf\n", star.id_number,
-  //	   (double) star.ra / 3600000.,
-  //	   (double) star.spd / 3600000. - 90.);
   int keep_going = 1;
   int n_read = 0;
   int i;
