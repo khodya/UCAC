@@ -16,7 +16,7 @@ static const double eps = 1e-7;
 
 int main(int arc, const char **argv) {
   const double start_dec = -10.;
-  const double end_dec = 90.;
+  const double end_dec = 40.;
   const double zone_height = .2;
   //const int zone = (int)((start_dec + 90.) / zone_height) + 1;
   int zone = 400;
@@ -43,7 +43,7 @@ int main(int arc, const char **argv) {
   int keep_going = 1;
   int n_read = 0;
   int i;
-  int star_i;
+  int star_i, star_k;
   FILE *file_a, *file_b, *file_c, *log;
   file_a = fopen("magA.dat", "w");
   file_b = fopen("magB.dat", "w");
@@ -57,13 +57,14 @@ int main(int arc, const char **argv) {
 	      && keep_going) 
 	for( i = 0; i < n_read && keep_going; i++) {
 	  UCAC4_STAR star = stars[i];
-	  star_i++;
+	  star_i++;  // star number within a zone
+	  star_k++;  // number of processed stars
 
 	  /* Picking stars */
 	  //printf("Picking stars\n");
 	  /* Filter on # catalogs used for PM  */
 	  if (star.n_cats_used < 3) {
-	    fprintf(log, "%3d %6d excluded: less number of catalogs used for PM: %2d\n",
+	    fprintf(log, "%03d-%06d excluded: less number of catalogs used for PM: %2d\n",
 		    zone,
 		    star_i,
 		    (int) star.n_cats_used);
@@ -71,7 +72,7 @@ int main(int arc, const char **argv) {
 	  }
 	  /* Filter on Proper motion */
 	  if ( !star.pm_ra && !star.pm_dec ) {
-	    fprintf(log, "%3d %6d excluded: no PM given: %6d %6d\n",
+	    fprintf(log, "%03d-%06d excluded: no PM given: %6d %6d\n",
 		    zone,
 		    star_i,
 		    star.pm_ra,
@@ -84,7 +85,7 @@ int main(int arc, const char **argv) {
 	    double pm = sqrt( pmra * pmra + pmdec * pmdec );
 	    //printf("%3d %6d %12.8lf\n", star.pm_ra, star.pm_dec, pm);
 	    if ( (pm - 100. ) > eps ) {
-	      fprintf(log, "%3d %6d excluded: total PM exceeds 100 mas/y: %12.8lf\n",
+	      fprintf(log, "%03d-%06d excluded: total PM exceeds 100 mas/y: %12.8lf\n",
 		      zone,
 		      star_i,
 		      pm);
@@ -112,15 +113,14 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%3d %6d included: I range %2d.%03d\n",
+	    fprintf(log, "%03d-%06d included: I range %2d.%03d\n",
 		    zone,
 		    star_i,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
-	    continue;
 	  }
 	  
-	  if ( star.mag2 > 11000 && star.mag2 < 14000 ) {
+	  if ( star.mag2 >= 11000 && star.mag2 <= 14000 ) {
 	    epoch_ra = 190000 + star.epoch_ra;
 	    epoch_dec = 190000 + star.epoch_dec;
 	    fprintf(file_b, "%3d %3d %3d.%01d %3d.%01d %4d.%02d %4d.%02d\n",
@@ -136,15 +136,14 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%3d %6d included: II range %2d.%03d\n",
+	    fprintf(log, "%03d-%06d included: II range %2d.%03d\n",
 		    zone,
 		    star_i,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
-	    continue;
 	  }
 
-	  if ( star.mag2 > 13000 && star.mag2 < 15900 ) {
+	  if ( star.mag2 >= 13000 && star.mag2 <= 15900 ) {
 	    epoch_ra = 190000 + star.epoch_ra;
 	    epoch_dec = 190000 + star.epoch_dec;
 	    fprintf(file_c, "%3d %3d %1d.%01d %1d.%01d %4d.%02d %4d.%02d\n",
@@ -160,15 +159,15 @@ int main(int arc, const char **argv) {
 		    (int) epoch_ra % 100,
 		    (int) epoch_dec / 100,
 		    (int) epoch_dec % 100);
-	    fprintf(log, "%3d %6d included: III range %2d.%03d\n",
+	    fprintf(log, "%03d-%06d included: III range %2d.%03d\n",
 		    zone,
 		    star_i,
 		    star.mag2 / 1000,
 		    abs(star.mag2 % 1000));
-	    continue;
 	  }
 	  
-	  fprintf(log, "%3d %6d excluded: out of range %2d.%03d\n",
+	  if ( star.mag2 < 9000 || star.mag2 > 15900 )
+	  fprintf(log, "%03d-%06d excluded: out of range %2d.%03d\n",
 		  zone,
 		  star_i, 
 		  star.mag2 / 1000,
@@ -178,11 +177,12 @@ int main(int arc, const char **argv) {
       fclose(ifile);
       zone++;
     }
-    fclose(file_a);
-    fclose(file_b);
-    fclose(file_c);
-    fclose(log);
-    return 0;
+  printf("number processed stars: %d\n", star_k);
+  fclose(file_a);
+  fclose(file_b);
+  fclose(file_c);
+  fclose(log);
+  return 0;
 }
     
 static FILE *get_ucac4_zone_file( const int zone_number, const char *path)
